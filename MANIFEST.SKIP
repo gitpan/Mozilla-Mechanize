@@ -1,0 +1,12 @@
+^dist.sh$
+^MANIFEST\.SKIP$
+^_build
+^Build$
+^blib
+~$
+\.bak$
+\.orig$
+\.svn
+^Mozilla-
+^releases
+CVS
