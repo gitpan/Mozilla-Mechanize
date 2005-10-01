@@ -15,29 +15,41 @@ sorry, read the code for now
 =head1 DESCRIPTION
 
 The C<Mozilla::Mechanize::Image> object is a thin wrapper around
-an image element. [more later]
+an image element.
 
 =head1 METHODS
 
-=head2 Mozilla::Mechanize::Image->new( $element )
+=head2 Mozilla::Mechanize::Image->new($image_node, $moz)
 
-Create a new object, that implements url, base, tag, height, width,
-alt, and name.
+Initialize a new object. $image_node is a
+L<Mozilla::DOM::HTMLElement|Mozilla::DOM::HTMLElement>
+(or a node that can be QueryInterfaced to one); specifically,
+it must be an HTMLImageElement or an HTMLInputElement
+whose type="image".
+
+$moz is a L<Mozilla::Mechanize|Mozilla::Mechanize> object.
+This is optional and currently unused.
 
 =cut
 
 sub new {
-    my ($class, $node) = @_;
+    my $class = shift;
+    my $node = shift;
+    my $moz = shift;
 
     my $iid = 0;
     if (lc $node->GetNodeName eq 'img') {
         $iid = Mozilla::DOM::HTMLImageElement->GetIID;
     } elsif (lc $node->GetNodeName eq 'input') {
         $iid = Mozilla::DOM::HTMLInputElement->GetIID;  # type="image"
+    } else {
+        my $errstr = "Invalid Image node";
+        defined($moz) ? $moz->die($errstr) : die($errstr);
     }
     my $image = $node->QueryInterface($iid);
 
     my $self = { image => $image };
+    $self->{moz} = $moz if defined $moz;
     bless($self, $class);
 }
 

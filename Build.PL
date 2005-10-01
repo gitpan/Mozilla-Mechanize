@@ -27,7 +27,7 @@ my $build = Module::Build->new(
 
     'requires' => {
         'Gtk2::MozEmbed' => '0.04',
-        'Mozilla::DOM' => '0.18',    # 0.18 for DocumentRange
+        'Mozilla::DOM' => '0.20',   # perlish list-returning methods
         'perl' => '5.8.0',
     },
     'build_requires' => {

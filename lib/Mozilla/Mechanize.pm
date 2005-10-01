@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 # $Id: Mechanize.pm,v 1.1.1.1 2005/09/25 00:09:34 slanning Exp $
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Glib qw(FALSE G_PRIORITY_LOW);
 use URI;
@@ -372,9 +372,9 @@ sub title { $_[0]->{agent}->{embed}->get_title }
 =head2 $moz->content
 
 Fetch the HTML of the document. This won't exactly match
-the HTML that's sent by the server... (For one thing,
-the DOCTYPE will not be there. Also, some linebreaks
-might be missing.)
+the HTML that's sent by the server... (The DOCTYPE/DTD will not
+be there, the <html> element is kind of generated so its attributes
+might be rearranged, and some linebreaks might be missing.)
 
 =cut
 
@@ -387,8 +387,9 @@ sub content {
     my $docelem = $self->get_document_element();
 
     # Try to output <html> with any attributes
-    $html .= '<' . $docelem->GetNodeName . ' ';
+    $html .= '<' . lc($docelem->GetNodeName);
     if ($docelem->HasAttributes) {
+        $html .= ' ';
         my $attrs = $docelem->GetAttributes;
         for (my $i = 0; $i < $attrs->GetLength; $i++) {
             my $attr = $attrs->Item($i);
@@ -1149,7 +1150,6 @@ sub click {
       $form->find_input( $button, 'submit' );
 
     $toclick and $toclick->click;
-    $self->_wait_while_busy;
 }
 
 =head2 $moz->click_button( %args )
@@ -1200,18 +1200,15 @@ sub click_button {
     @buttons or return;
     if ( $args{name} ) {
         $buttons[0]->click;
-        return $self->_wait_while_busy;
         return 1;
     } elsif ( $args{number} ) {
         @buttons <= $args{number} and return
         $buttons[ $args{number} - 1 ]->click();
-        return $self->_wait_while_busy;
         return 1;
     } elsif ( $args{value} ) {
         for my $button ( @buttons ) {
             if ( $button->value eq $args{value} ) {
                 $button->click();
-                return $self->_wait_while_busy;
                 return 1;
             }
         }
@@ -1237,7 +1234,6 @@ sub submit {
     my $form = $self->current_form;
 
     $form->submit();
-    $self->_wait_while_busy;
 }
 
 =head2 $moz->submit_form( %opt )
@@ -1572,7 +1568,7 @@ sub _extract_forms {
     my $docelem = $self->get_document_element;
     my $formlist = $docelem->GetElementsByTagName('form');
     for (my $i = 0; $i < $formlist->GetLength; $i++) {
-        push @forms, Mozilla::Mechanize::Form->new($formlist->Item($i));
+        push @forms, Mozilla::Mechanize::Form->new($formlist->Item($i), $self);
     }
     $self->{forms} = \@forms;
 
@@ -1617,7 +1613,7 @@ sub _extract_links {
                     next TAG;
                 }
             }
-            push @links, Mozilla::Mechanize::Link->new($item);
+            push @links, Mozilla::Mechanize::Link->new($item, $self);
         }
 
     }
@@ -1643,7 +1639,7 @@ sub _extract_images {
     # img
     my $list = $docelem->GetElementsByTagName('img');
     for (my $i = 0; $i < $list->GetLength; $i++) {
-        push @images, Mozilla::Mechanize::Image->new($list->Item($i));
+        push @images, Mozilla::Mechanize::Image->new($list->Item($i), $self);
     }
     $list = $docelem->GetElementsByTagName('input');
     INPUT: for (my $i = 0; $i < $list->GetLength; $i++) {
@@ -1660,7 +1656,7 @@ sub _extract_images {
             next INPUT;
         }
 
-        push @images, Mozilla::Mechanize::Image->new($input);
+        push @images, Mozilla::Mechanize::Image->new($input, $self);
     }
     $self->{images} = \@images;
 

@@ -1,6 +1,6 @@
-A lot of cleaning up, docs
+Tests!
 
-Tests
+Cleaning up, documentation
 
 Suppress annoying confirmation dialog when submitting a form
 for the first time (thereafter saved in profile).
@@ -11,5 +11,5 @@ Basic authentication is unimplemented
 (not sure how to set headers - possibly nsIWebNavigation
 if I can figure out nsIInputStream)
 
-Currently Gtk2::MozEmbed is the hardcoded agent used.
-Would be better if you could plug in your own browser code.
+Currently the user-agent is hardcoded.
+Would be better if you could plugin/inherit your own browser code.

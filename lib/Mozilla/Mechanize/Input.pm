@@ -19,16 +19,26 @@ HTML input elements.
 
 =head1 METHODS
 
-=head2 Mozilla::Mechanize::Input->new( $ie_input )
+=head2 Mozilla::Mechanize::Input->new($input_node, $moz)
 
-Initialize a new object.
+Initialize a new object. $input_node is a
+L<Mozilla::DOM::HTMLElement|Mozilla::DOM::HTMLElement>
+(or a node that can be QueryInterfaced to one); specifically,
+it must be an HTMLInputElement, an HTMLButtonElement, an HTMLSelectElement,
+or an HTMLTextAreaElement.
+$moz is a L<Mozilla::Mechanize|Mozilla::Mechanize> object.
+(This latter is a hack for `click', so that new pages can load
+in the browser. The GUI has to be able to enter its main loop.
+If you don't plan to use that method, you don't have to pass it in.)
 
 =cut
 
 sub new {
-    my ($class, $node) = @_;
+    my $class = shift;
+    my $node = shift;
+    my $moz = shift;
 
-    my $iid = 0;
+    my $iid;
 
     # turn the Node into the appropriate HTMLElement
     if (lc $node->GetNodeName eq 'input') {
@@ -39,10 +49,14 @@ sub new {
         $iid = Mozilla::DOM::HTMLSelectElement->GetIID;
     } elsif (lc $node->GetNodeName eq 'textarea') {
         $iid = Mozilla::DOM::HTMLTextAreaElement->GetIID;
+    } else {
+        my $errstr = "Invalid Input node";
+        defined($moz) ? $moz->die($errstr) : die($errstr);
     }
     my $input = $node->QueryInterface($iid);
 
     my $self = { input => $input };
+    $self->{moz} = $moz if defined $moz;
     bless($self, $class);
 }
 
@@ -167,7 +181,7 @@ sub radio_value {
 
 =head2 $input->click
 
-Calls the C<click()> method on the actual object. This may not work.
+Calls the C<click()> method on the actual object.
 
 =cut
 
@@ -175,6 +189,10 @@ sub click {
     my $self = shift;
     my $input = $self->{input};
     $input->Click();
+
+    # XXX: if they didn't pass $moz to `new', they're stuck..
+    my $moz = $self->{moz} || return;
+    $moz->_wait_while_busy();
 }
 
 

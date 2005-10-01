@@ -19,10 +19,17 @@ HTML link elements.
 
 =head1 METHODS
 
-=head2 Mozilla::Mechanize::Link->new( $element )
+=head2 Mozilla::Mechanize::Link->new($link_node, $moz)
 
-C<$element> is a L<Mozilla::DOM::HTML*Element|Mozilla::DOM::HTML*Element>
-object with a C<tagName()> of B<IFRAME>, B<FRAME>, <AREA> or <A>.
+Initialize a new object. $link_node is a
+L<Mozilla::DOM::HTMLElement|Mozilla::DOM::HTMLElement>
+(or a node that can be QueryInterfaced to one); specifically,
+it must be an HTMLAnchorElement, an HTMLFrameElement, an HTMLIFrameElement,
+or an HTMLAreaElement.
+$moz is a L<Mozilla::Mechanize|Mozilla::Mechanize> object.
+(This latter is a hack for `click', so that new pages can load
+in the browser. The GUI has to be able to enter its main loop.
+If you don't plan to use that method, you don't have to pass it in.)
 
 B<Note>: Although it supports the same methods as
 L<WWW::Mechanize::Link|WWW::Mechanize::Link>, it is a
@@ -31,7 +38,9 @@ completely different implementation.
 =cut
 
 sub new {
-    my ($class, $node) = @_;
+    my $class = shift;
+    my $node = shift;
+    my $moz = shift;
 
     my $iid = 0;
 
@@ -44,10 +53,14 @@ sub new {
         $iid = Mozilla::DOM::HTMLIFrameElement->GetIID;
     } elsif (lc $node->GetNodeName eq 'area') {
         $iid = Mozilla::DOM::HTMLAreaElement->GetIID;
+    } else {
+        my $errstr = "Invalid Link node";
+        defined($moz) ? $moz->die($errstr) : die($errstr);
     }
     my $link = $node->QueryInterface($iid);
 
     my $self = { link => $link };
+    $self->{moz} = $moz if defined $moz;
     bless($self, $class);
 }
 
@@ -112,18 +125,17 @@ sub tag {
 
 =head2 $link->click
 
-B<XXX: to-do
-(does this fire onClick?)>
+Click the link (does this fire onClick?).
 
 =cut
 
 sub click {
-die "Link's click method isn't implemented yet\n";
-
     my $self = shift;
     my $link = $self->{link};
 
-    # Create the click event
+    # XXX: maybe this could be done better
+
+    # Create a click event
     my $doc = $link->GetOwnerDocument;
     my $deiid = Mozilla::DOM::DocumentEvent->GetIID();
     my $docevent = $doc->QueryInterface($deiid);
@@ -135,7 +147,9 @@ die "Link's click method isn't implemented yet\n";
     my $target = $link->QueryInterface($etiid);
     $target->DispatchEvent($event);
 
-    # XXX: gah, how do we do _wait_while_busy here?
+    # XXX: if they didn't pass $moz to `new', they're stuck..
+    my $moz = $self->{moz} || return;
+    $moz->_wait_while_busy();
 }
 
 

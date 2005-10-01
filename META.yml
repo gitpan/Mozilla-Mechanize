@@ -1,20 +1,20 @@
 ---
 name: Mozilla-Mechanize
-version: 0.01
+version: 0.02
 author:
   - Scott Lanning <slanning@cpan.org>
 abstract: Like WWW::Mechanize but using Gtk2::MozEmbed
 license: perl
 requires:
   Gtk2::MozEmbed: 0.04
-  Mozilla::DOM: 0.18
+  Mozilla::DOM: 0.20
   perl: 5.8.0
 build_requires:
   Test::More: 0.54
 provides:
   Mozilla::Mechanize:
     file: lib/Mozilla/Mechanize.pm
-    version: 0.01
+    version: 0.02
   Mozilla::Mechanize::Browser:
     file: lib/Mozilla/Mechanize/Browser.pm
   Mozilla::Mechanize::Browser::Gtk2MozEmbed:

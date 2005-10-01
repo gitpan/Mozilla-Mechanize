@@ -10,6 +10,9 @@ TODO
 eg/index.html
 eg/index2.html
 eg/synopsis.pl
+eg/form.html
+eg/result.html
+eg/submit.pl
 lib/Mozilla/Mechanize.pm
 lib/Mozilla/Mechanize/Browser.pm
 lib/Mozilla/Mechanize/Browser/Gtk2MozEmbed.pm

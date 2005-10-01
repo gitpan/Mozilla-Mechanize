@@ -21,20 +21,31 @@ L<Mozilla::DOM::HTMLFormElement|Mozilla::DOM::HTMLFormElement>.
 
 =head1 METHODS
 
-=head2 Mozilla::Mechanize::Form->new( $form_obj );
+=head2 Mozilla::Mechanize::Form->new($form_node, $moz);
 
-Initialize a new object.
+Initialize a new object. $form_node is a
+L<Mozilla::DOM::HTMLFormElement|Mozilla::DOM::HTMLFormElement>
+(or a node that can be QueryInterfaced to one).
+$moz is a L<Mozilla::Mechanize|Mozilla::Mechanize> object.
+(This latter is a hack for `submit' and `reset',
+so that new pages can load in the browser. The GUI has to be
+able to enter its main loop. If you don't plan to use those
+methods, you don't have to pass it in.)
+
 
 =cut
 
 sub new {
-    my ($class, $node) = @_;
+    my $class = shift;
+    my $node = shift;
+    my $moz = shift;
 
     # turn the Node into an HTMLFormElement
     my $iid = Mozilla::DOM::HTMLFormElement->GetIID;
     my $form = $node->QueryInterface($iid);
 
     my $self = { form => $form };
+    $self->{moz} = $moz if defined $moz;
     bless($self, $class);
 }
 
@@ -223,20 +234,27 @@ sub submit {
     my $self = shift;
     my $form = $self->{form};
     $form->Submit();
+
+    # XXX: if they didn't pass $moz to `new', they're stuck..
+    my $moz = $self->{moz} || return;
+    $moz->_wait_while_busy();
 }
 
 =head2 $form->reset()
 
 Reset inputs to their default values.
-(Note: I added this method.)
+(Note: I added this method, though it wasn't in WWW::Mechanize.)
 
 =cut
 
 sub reset {
     my $self = shift;
     my $form = $self->{form};
-    # XXX: not sure if this will work w/ Input.pm
     $form->Reset();
+
+    # XXX: if they didn't pass $moz to `new', they're stuck..
+    my $moz = $self->{moz} || return;
+    $moz->_wait_while_busy();
 }
 
 =head2 $self->_radio_group( $name )

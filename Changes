@@ -1,2 +1,9 @@
+0.02  2005-10-01
+  - Fixed several methods weren't allowing the GUI to run after executing.
+    o  Form.pm: submit, reset
+    o  Input.pm: click
+    o  Link.pm: click
+    Thanks to Uwe Voelker for reporting it and for the example code.
+
 0.01  2005-09-25
-  - initial release, ported from Win32::IE::Mechanize
+  - Initial release, ported from Win32::IE::Mechanize.

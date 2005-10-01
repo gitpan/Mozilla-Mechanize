@@ -6,7 +6,7 @@ use warnings;
 
 use Cwd 'getcwd';
 
-use lib '../lib';
+#use lib '../lib';
 use Mozilla::Mechanize;
 
 my $moz = Mozilla::Mechanize->new( visible => 1 );
