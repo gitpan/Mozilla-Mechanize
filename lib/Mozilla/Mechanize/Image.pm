@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Image;
 use strict;
 use warnings;
 
-# $Id: Image.pm,v 1.1.1.1 2005/09/25 00:09:34 slanning Exp $
+# $Id: Image.pm,v 1.2 2005/09/30 21:24:40 slanning Exp $
 
 =head1 NAME Mozilla::Mechanize::Image
 

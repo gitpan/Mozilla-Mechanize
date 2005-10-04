@@ -9,4 +9,5 @@
 \.svn
 ^Mozilla-
 ^releases
+^tmp
 CVS

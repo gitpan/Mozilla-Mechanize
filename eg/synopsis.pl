@@ -6,10 +6,10 @@ use warnings;
 
 use Cwd 'getcwd';
 
-#use lib '../lib';
+use lib '../lib';
 use Mozilla::Mechanize;
 
-my $moz = Mozilla::Mechanize->new( visible => 1 );
+my $moz = Mozilla::Mechanize->new(debug => 1, visible=> 0);
 
 my $cwd = getcwd();
 $moz->get("file://$cwd/index.html");

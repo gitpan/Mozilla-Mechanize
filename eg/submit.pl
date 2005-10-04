@@ -5,6 +5,7 @@ use warnings;
 
 use Cwd;
 use Data::Dumper;
+use lib '../lib';
 use Mozilla::Mechanize;
 
 

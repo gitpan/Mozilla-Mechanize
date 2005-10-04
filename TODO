@@ -13,3 +13,5 @@ if I can figure out nsIInputStream)
 
 Currently the user-agent is hardcoded.
 Would be better if you could plugin/inherit your own browser code.
+
+Handle popped-up windows.

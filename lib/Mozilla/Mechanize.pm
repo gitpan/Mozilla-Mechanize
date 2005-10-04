@@ -2,13 +2,13 @@ package Mozilla::Mechanize;
 use strict;
 use warnings;
 
-# $Id: Mechanize.pm,v 1.1.1.1 2005/09/25 00:09:34 slanning Exp $
-our $VERSION = '0.02';
+# $Id: Mechanize.pm,v 1.2 2005/09/30 21:24:35 slanning Exp $
+our $VERSION = '0.03';
 
 use Glib qw(FALSE G_PRIORITY_LOW);
 use URI;
 
-use Mozilla::DOM '0.18';
+use Mozilla::DOM '0.20';
 use Mozilla::Mechanize::Browser;
 use Mozilla::Mechanize::Form;
 use Mozilla::Mechanize::Input;
@@ -23,7 +23,7 @@ Mozilla::Mechanize - Like WWW::Mechanize but using Gtk2::MozEmbed
 
     use Mozilla::Mechanize;
 
-    my $moz = Mozilla::Mechanize->new( visible => 1 );
+    my $moz = Mozilla::Mechanize->new();
 
     $moz->get( $url );
 
@@ -49,6 +49,7 @@ Mozilla::Mechanize - Like WWW::Mechanize but using Gtk2::MozEmbed
 =begin comment
 
 XXX: not sure how to add headers
+(necko/nsIHttpAuthenticator.h ?)
 
 Now also tries to support Basic-Authentication like LWP::UserAgent
 
@@ -92,30 +93,30 @@ Ditto from me regarding Abe Timmerman's L<Win32::IE::Mechanize|Win32::IE::Mechan
 =cut
 
 
-# XXX: not sure if/how these will be supported
-
-# These are properties of InternetExplorer.Application we support
 my %moz_property = (
-    addressbar => { type => 'b', value => undef },
-    fullscreen => { type => 'b', value => undef },
-    resizable  => { type => 'b', value => undef },
-    statusbar  => { type => 'b', value => undef },
-    toolbar    => { type => 'b', value => undef },
-    visible    => { type => 'b', value => 0     },
-    height     => { type => 'n', value => undef },
-    width      => { type => 'n', value => undef },
-    left       => { type => 'n', value => undef },
-    top        => { type => 'n', value => undef },
+#    addressbar => { type => 'b', value => undef },
+    fullscreen => { type => 'b', value => 0 },
+#    resizable  => { type => 'b', value => undef },
+#    statusbar  => { type => 'b', value => undef },
+#    toolbar    => { type => 'b', value => undef },
+    visible    => { type => 'b', value => 1     },
+    width      => { type => 'n', value => 600   },
+    height     => { type => 'n', value => 400   },
+#    left       => { type => 'n', value => undef },
+#    top        => { type => 'n', value => undef },
 );
+
 
 =head2 Mozilla::Mechanize->new( [%options] )
 
-This initialises a new browser window and sets all the
+This initializes a new browser window and sets all the
 properties that are passed via the C<%options> hash(ref).
+Currently supported options are: quiet, onwarn, onerror.
 
-B<XXX: %options isn't currently supported>
-
-See C<L<set_property()>> for supported options.
+B<XXX: most `set_property' %options aren't currently supported>.
+Currently supported Browser options are: height, width, visible,
+fullscreen.
+See C<L<set_property()>>.
 
 =cut
 
@@ -124,70 +125,82 @@ sub new {
 
     my $self = bless {
         _opt    => {},
-        quiet   => 0,
         onwarn  => \&Mozilla::Mechanize::__warn,
         onerror => \&Mozilla::Mechanize::__die,
+        quiet   => 0,
+        debug   => 0,
     }, $class;
 
     my %opt = @_ ? UNIVERSAL::isa( $_[0], 'HASH' ) ? %{ $_[0] } : @_ : ();
+
+#    $self->{_opt} = { map {
+#        ( $_ => __prop_value( $_, $opt{ $_ } ) )
+#    } grep exists $moz_property{ lc $_ } => keys %opt };
+    # Sets all default values (before it only set ones passed in)
     $self->{_opt} = { map {
-        ( $_ => __prop_value( $_, $opt{ $_ } ) )
-    } grep exists $moz_property{ lc $_ } => keys %opt };
+        my $prop = lc $_;
+        ($prop => __prop_value($prop, $opt{$prop}))
+    } keys %moz_property };
 
-    # some more options not for IE
-    $self->{ $_ } = exists $opt{ $_ } ? $opt{ $_ } : undef
-        for qw( quiet onwarn onerror );
+    # some more options not for Browser
+    $self->{$_} = exists $opt{$_} ? $opt{$_} : undef
+        for qw(quiet debug onwarn onerror);
 
-    $self->open;
+    $self->open();
 }
 
 =head2 $moz->set_property( %opt )
 
-B<XXX: properties aren't currently supported>
+B<XXX: this method is currently not supported. You can only set
+certain options through `new' (which see).>
 
 Allows you to set these supported properties:
 
 =over 4
 
-=item B<addressbar>
+=item B<visible>
+
+Set the visibility of the Browser window. Setting this to 0
+iconifies the window, while setting it to 1 deiconifies it.
+I'd be very happy if it wasn't necessary to even create a window,
+but I don't believe it's possible because of the way Mozilla
+is implemented (layout and DOM are apparently tightly coupled).
+
+=item B<height>
+
+Set the height of the Browser window.
+
+=item B<width>
+
+Set the width of the Browser window.
+
+=item B<addressbar> (NOT SUPPORTED)
 
 Set the visibility of the addressbar
 
 =item B<fullscreen>
 
-Set the window of IE to fullscreen (like F11)
+Set the Browser window to fullscreen. Setting it false unfullscreens.
 
-=item B<resizable>
+=item B<resizable> (NOT SUPPORTED)
 
 Set the resize-ability
 
-=item B<statusbar>
+=item B<statusbar> (NOT SUPPORTED)
 
 Set the visibility of the statusbar
 
-=item B<toolbar>
+=item B<toolbar> (NOT SUPPORTED)
 
 Set the visibility of the toolbar
 
-=item B<visible>
+=item B<left> (NOT SUPPORTED)
 
-Set the visibility of the IE window
+Set the left coordinate of the Browser window
 
-=item B<height>
+=item B<top> (NOT SUPPORTED)
 
-Set the height of the IE window
-
-=item B<width>
-
-Set the width of the IE window
-
-=item B<left>
-
-Set the left coordinate of the IE window
-
-=item B<top>
-
-Set the top-coordinate of the IE window
+Set the top-coordinate of the Browser window
 
 =back
 
@@ -217,19 +230,24 @@ sub close {
     my $self = shift;
     $self->{agent}->quit;
     $self->{agent} = undef;
+
+    # XXX: I think we need to run the GUI here
 }
 
 sub open {
     my $self = shift;
     defined $self->{agent} and return;
 
-    $self->{agent} = Mozilla::Mechanize::Browser->new()
+    my $browser_opts = $self->{_opt};
+    $browser_opts->{debug} = $self->{debug};
+
+    $self->{agent} = Mozilla::Mechanize::Browser->new($browser_opts)
       or $self->die("Cannot create a new Browser");
 
-    foreach my $prop ( keys %{ $self->{_opt} } ) {
-        defined $self->{_opt}{ $prop } and
-            $self->{agent}->{ $prop } = $self->{_opt}{ $prop };
-    }
+#    foreach my $prop ( keys %{ $self->{_opt} } ) {
+#        defined $self->{_opt}{ $prop } and
+#            $self->{agent}->{ $prop } = $self->{_opt}{ $prop };
+#    }
 
     return $self;
 }
@@ -275,7 +293,8 @@ Reload the page.
 =cut
 
 sub reload {
-     $_[0]->{agent}->{embed}->reload('reloadnormal');
+    $_[0]->{agent}->{embed}->reload('reloadnormal');
+    $_[0]->_wait_while_busy;
 }
 
 =head2 $moz->back()
@@ -537,9 +556,9 @@ sub find_link {
 
     my $wantall = ( $parms{n} eq "all" );
 
-    $self->_clean_keys( 
+    $self->_clean_keys(
         \%parms,
-        qr/^(n|(text|url|url_abs|name|tag)(_regex)?)$/ 
+        qr/^(n|(text|url|url_abs|name|tag)(_regex)?)$/
     );
 
     my @links = $self->links or return;
@@ -1037,23 +1056,23 @@ sub set_visible {
     my @inputs = $form->inputs;
 
     while (my $value = shift) {
-        if ( ref $value eq 'ARRAY' ) {
-           my ( $type, $val ) = @$value;
-           while ( my $input = shift @inputs ) {
+        if (ref $value eq 'ARRAY') {
+           my ($type, $val) = @$value;
+           while (my $input = shift @inputs) {
                next if $input->type eq 'hidden';
-               if ( $input->type eq $type ) {
-                   $input->value( $val );
+               if ($input->type eq $type) {
+                   $input->value($val);
                    last;
                }
-           } # while
+           }
         } else {
-           while ( my $input = shift @inputs ) {
+           while (my $input = shift @inputs) {
                next if $input->type eq 'hidden';
-               $input->value( $value );
+               $input->value($value);
                last;
-           } # while
+           }
        }
-    } # while
+    }
 }
 
 =head2 $moz->tick( $name, $value[, $set] )
@@ -1080,7 +1099,8 @@ sub tick {
 
     foreach my $check_box ( @check_boxes ) {
         next unless $check_box->value eq $value;
-        ${$check_box}->{checked} = $set || 0;
+        # XXX: breaks encapsulation
+        $check_box->{input}->SetChecked($set || 0);
     }
     return 1;
 }
@@ -1154,6 +1174,8 @@ sub click {
 
 =head2 $moz->click_button( %args )
 
+XXX: broken
+
 Has the effect of clicking a button on a form by specifying its name,
 value, or index.  Its arguments are a list of key/value pairs.  Only
 one of name, number, or value must be specified.
@@ -1191,7 +1213,7 @@ sub click_button {
     }
 
     my $form = $self->current_form;
-    my @buttons = sort { 
+    my @buttons = sort {
         ${$a}->{sourceIndex} <=> ${$b}->{sourceIndex}
     } $form->find_input( $args{name}, 'button' ),
       $form->find_input( $args{name}, 'image' ),
@@ -1587,39 +1609,63 @@ The links come from the following:
 
 =item "<FRAME SRC=...>"
 
+Note: only works within a <frameset>
+
 =item "<IFRAME SRC=...>"
+
+Note: this must be like <iframe ...></iframe>
 
 =back
 
 =cut
 
-sub _extract_links {
-    my $self = shift;
+{
+    # Recursively get link elements. This is necessary in order
+    # to preserve their order. Too bad Mozilla doesn't have
+    # an `all' method like Internet Explorer.
+
     my @links;
 
-    my $docelem = $self->get_document_element;
-    foreach my $tag (qw(iframe frame area a)) {
-        my $list = $docelem->GetElementsByTagName($tag);
-        TAG: for (my $i = 0; $i < $list->GetLength; $i++) {
-            my $item = $list->Item($i);
-            if (lc $item->GetNodeName eq 'a') {
-                # make sure it has an href attribute
-                HREF: {
-                    my $attrs = $item->GetAttributes;
-                    for (my $j = 0; $j < $attrs->GetLength; $j++) {
-                        my $attr = $attrs->Item($j);
-                        last HREF if lc $attr->GetNodeName eq 'href';
-                    }
-                    next TAG;
-                }
-            }
-            push @links, Mozilla::Mechanize::Link->new($item, $self);
+    sub _extract_links {
+        my ($self, $subelement) = @_;
+        my $node;
+
+        # The first time, it's called with no subelement
+        if (defined $subelement) {
+            $node = $subelement;
+        } else {
+            @links = ();
+            $node = $self->get_document_element;
         }
 
-    }
-    $self->{links} = \@links;
+        # If it's a link element, get it; otherwise, recurse if has children
+        if ($node->GetNodeName =~ /^(iframe|frame|area|a)$/i) {
+            my $tagname = lc $1;
 
-    return wantarray ? @{ $self->{links} } : $self->{links};
+            if ($tagname eq 'a') {
+                # Element interface is more convenient for attributes
+                my $element = $node->QueryInterface(Mozilla::DOM::Element->GetIID);
+                # <a> are links only if they have an href
+                push @links, Mozilla::Mechanize::Link->new($element, $self)
+                  if $element->HasAttribute('href');
+                $self->debug("added '$tagname' link");
+            } else {
+                push @links, Mozilla::Mechanize::Link->new($node, $self);
+                $self->debug("added '$tagname' link");
+            }
+        } elsif ($node->HasChildNodes) {
+            my @children = $node->GetChildNodes;
+            foreach my $child (grep {$_->GetNodeName !~ /^#/} @children) {
+                $self->_extract_links($child);
+            }
+        }
+
+        # Continue only at the top-level
+        return if defined $subelement;
+
+        $self->{links} = \@links;
+        return wantarray ? @{ $self->{links} } : $self->{links};
+    }
 }
 
 =head2 $moz->_extract_images()
@@ -1629,6 +1675,9 @@ interface. All images are mapped onto the L<Mozilla::Mechanize::Image> interface
 that mimics L<WWW::Mechanize::Images>.
 
 =cut
+
+
+# XXX: has to recurse like _extract_links
 
 sub _extract_images {
     my $self = shift;
@@ -1740,6 +1789,13 @@ sub __die {
     &Carp::croak; # pass thru
 }
 
+sub debug {
+    my ($self, $msg) = @_;
+    my (undef, $file, $line) = caller();
+    print STDERR "$msg at $file line $line\n" if $self->{debug};
+}
+
+
 =head2 $self->_extra_headers( )
 
 For the moment we only support B<basic authentication>.
@@ -1779,19 +1835,21 @@ value or the default value from C<%moz_properties>.
 =cut
 
 sub __prop_value($;$) {
-    my( $key, $value ) = @_;
+    my ($key, $value) = @_;
     $key = lc $key;
-    exists $moz_property{ $key } or return undef;
-    @_ > 1 or return $moz_property{ $key }{value};
+
+    exists $moz_property{$key} or return undef;
+    @_ > 1 or return $moz_property{$key}{value};
+
     CASE: {
         local $_ = $moz_property{ $key }{type};
 
         /^b$/ and do {
-            defined $value or return undef;
+            defined $value or return $moz_property{$key}{value};
             return $value ? 1 : 0;
         };
         /^n$/ and do {
-            defined $value or return undef;
+            defined $value or return $moz_property{$key}{value};
             return $value =~ /((?:\+|-)?[0-9]+)/ ? $1 : 0;
         };
     }

@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Link;
 use strict;
 use warnings;
 
-# $Id: Link.pm,v 1.1.1.1 2005/09/25 00:09:34 slanning Exp $
+# $Id: Link.pm,v 1.2 2005/09/30 21:24:40 slanning Exp $
 
 =head1 NAME Mozilla::Mechanize::Link
 
@@ -107,7 +107,7 @@ sub name {
     my $self = shift;
     my $link = $self->{link};
 
-    return $link->HasAttribute('name') ? $link->GetName : '';
+    return $link->HasAttribute('name') ? $link->GetAttribute('name') : '';
 }
 
 =head2 $link->tag

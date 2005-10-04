@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Input;
 use strict;
 use warnings;
 
-# $Id: Input.pm,v 1.1.1.1 2005/09/25 00:09:34 slanning Exp $
+# $Id: Input.pm,v 1.2 2005/09/30 21:24:40 slanning Exp $
 
 =head1 NAME
 
@@ -136,7 +136,7 @@ die "not implemented yet\n";
 
         # Make sure only the last value is set for:
         # select-one type with multiple values;
-        @values = ( $values[-1] ) if lc( $input->type ) eq 'select-one';
+        @values = ( $values[-1] ) if lc($self->type) eq 'select-one';
 
         %vals = map { ( $_ => undef ) } @values;
 
@@ -164,18 +164,18 @@ sub radio_value {
     my $self = shift;
     my $input = $self->{input};
 
-    return unless $input->type =~ /^radio/i;
+    return unless $self->type =~ /^radio/i;
 
-    my $form = Mozilla::Mechanize::Form->new( $input->form );
-    my @radios = $form->_radio_group( $self->name );
+    my $form = Mozilla::Mechanize::Form->new($input->GetForm, $self->{moz});
+    my @radios = $form->_radio_group($self->name);
 
-    if ( @_ ) {
+    if (@_) {
         my $value = shift;
         for (@radios) {
-            $_->SetChecked(($_->GetValue eq $value) || 0);
+            $_->{input}->SetChecked(($_->{input}->GetValue eq $value) || 0);
         }
     }
-    my ($value) = map($_->GetValue, grep($_->GetChecked, @radios));
+    my ($value) = map($_->{input}->GetValue, grep($_->{input}->GetChecked, @radios));
     return $value;
 }
 

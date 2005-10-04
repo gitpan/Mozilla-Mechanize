@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Form;
 use strict;
 use warnings;
 
-# $Id: Form.pm,v 1.1.1.1 2005/09/25 00:09:34 slanning Exp $
+# $Id: Form.pm,v 1.2 2005/09/30 21:24:40 slanning Exp $
 
 use Mozilla::Mechanize::Input;
 
@@ -51,8 +51,7 @@ sub new {
 
 =head2 $form->method( [$new_method] )
 
-Get/Set the I<method> used to submit the from (i.e. B<GET> or
-B<POST>).
+Get/Set the I<method> used to submit the from (i.e. B<GET> or B<POST>).
 
 =cut
 
@@ -61,7 +60,11 @@ sub method {
     my $val = shift;
     my $form = $self->{form};
     $form->SetMethod($val) if defined $val;
-    return $form->GetMethod;
+    my $method = $form->GetMethod;
+
+    # XXX: provide default value (not sure about this...)
+    $method = 'GET' unless $method =~ /\S/;
+    return $method;
 }
 
 =head2 $form->action( [$new_action] )
@@ -75,6 +78,7 @@ sub action {
     my $val = shift;
     my $form = $self->{form};
     $form->SetAction($val) if defined $val;
+    # This is supposed to be required in HTML 4.01
     return $form->GetAction;
 }
 
@@ -89,7 +93,11 @@ sub enctype {
     my $val = shift;
     my $form = $self->{form};
     $form->SetEnctype($val) if defined $val;
-    return $form->GetEnctype;
+    my $enctype = $form->GetEnctype;
+
+    # XXX: provide default value (not sure about this...)
+    $enctype = 'application/x-www-form-urlencoded' unless $enctype =~ /\S/;
+    return $enctype;
 }
 
 =head2 $form->name()
@@ -109,7 +117,8 @@ sub name {
 =head2 $form->attr( $name[, $new_value] )
 
 Get/Set any of the attributes from the FORM-tag
-(acceptcharset, action, enctype, method, name, target).
+(acceptcharset, action, enctype, method, name, target
+(returns undef if $name isn't one of these)).
 
 =cut
 
@@ -119,11 +128,22 @@ sub attr {
     my $name = shift;
     my $form = $self->{form};
 
-    my $attr = grep $name =~ /^$_$/i, qw(AcceptCharset Action Enctype Method Name Target);
+    my ($attr) = grep $name =~ /^$_$/i, qw(AcceptCharset Action Enctype Method Name Target);
+    return unless defined $attr;
+
     my $method = "Set$attr";
     $form->$method(shift) if @_;
     $method = "Get$attr";
-    return $form->$method;
+    my $val = $form->$method;
+
+    # Defaults for non-present attributes
+    unless ($val =~ /\S/) {
+        $val = 'GET' if $attr eq 'Method';
+        $val = 'application/x-www-form-urlencoded' if $attr eq 'Enctype';
+        # action is supposed to be required in HTML 4.01
+    }
+
+    return $val;
 }
 
 =head2 $form->inputs()
@@ -147,7 +167,7 @@ sub inputs {
         my $nodelist = $form->GetElementsByTagName($tag);
         for (my $i = 0; $i < $nodelist->GetLength; $i++) {
             my $node = $nodelist->Item($i);
-            push @inputs, Mozilla::Mechanize::Input->new($node);
+            push @inputs, Mozilla::Mechanize::Input->new($node, $self->{moz});
         }
     }
 

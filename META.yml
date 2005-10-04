@@ -1,6 +1,6 @@
 ---
 name: Mozilla-Mechanize
-version: 0.02
+version: 0.03
 author:
   - Scott Lanning <slanning@cpan.org>
 abstract: Like WWW::Mechanize but using Gtk2::MozEmbed
@@ -14,7 +14,7 @@ build_requires:
 provides:
   Mozilla::Mechanize:
     file: lib/Mozilla/Mechanize.pm
-    version: 0.02
+    version: 0.03
   Mozilla::Mechanize::Browser:
     file: lib/Mozilla/Mechanize/Browser.pm
   Mozilla::Mechanize::Browser::Gtk2MozEmbed:

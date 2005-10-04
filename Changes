@@ -1,9 +1,29 @@
+0.03  2005-10-02
+  - Ported half of the tests from Win32::IE::Mechanize, uncovering
+    many bugs (NOTE: tests will definitely fail now):
+    o  Mechanize.pm:
+       - reload (GUI not fully loading)
+       - links (wrong element order)
+    o  Form.pm:
+       - inputs (GUI not fully loading)
+       - enctype and method now return default values if not present
+       - attr, enctype and method return default values if not present
+       - tick (wasn't working)
+    o  Input.pm:
+       - radio_value (GUI not fully loading, other problems)
+    o  Link.pm:
+       - name (failed for <area>)
+  - Put 'width', 'height', and 'visible' options in Mechanize->new
+    (not in set_property, though)
+  - Added `debug' option to Mechanize->new, which gives tracing info
+    (in principle)
+
 0.02  2005-10-01
-  - Fixed several methods weren't allowing the GUI to run after executing.
+  - Fixed several methods that weren't allowing the GUI to run
     o  Form.pm: submit, reset
     o  Input.pm: click
     o  Link.pm: click
-    Thanks to Uwe Voelker for reporting it and for the example code.
+    Thanks to Uwe Voelker for reporting it and for example code.
 
 0.01  2005-09-25
   - Initial release, ported from Win32::IE::Mechanize.
