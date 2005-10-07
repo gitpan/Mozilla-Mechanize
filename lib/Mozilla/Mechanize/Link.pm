@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Link;
 use strict;
 use warnings;
 
-# $Id: Link.pm,v 1.2 2005/09/30 21:24:40 slanning Exp $
+# $Id: Link.pm,v 1.3 2005/10/06 18:25:18 slanning Exp $
 
 =head1 NAME Mozilla::Mechanize::Link
 

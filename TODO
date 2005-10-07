@@ -1,17 +1,22 @@
-Tests!
+Roughly in order of priority:
+
+Finish tests.
+
+Currently the user-agent is hardcoded.
+Would be better if you could plugin/inherit your own browser code.
 
 Cleaning up, documentation
+
+Sync up with version 0.009_17 of Win32::IE::Mechanize.
+(Currently based on 0.009.)
 
 Suppress annoying confirmation dialog when submitting a form
 for the first time (thereafter saved in profile).
 
 Several methods from Link, etc., aren't implemented yet
 
+Handle popped-up windows.
+
 Basic authentication is unimplemented
 (not sure how to set headers - possibly nsIWebNavigation
 if I can figure out nsIInputStream)
-
-Currently the user-agent is hardcoded.
-Would be better if you could plugin/inherit your own browser code.
-
-Handle popped-up windows.

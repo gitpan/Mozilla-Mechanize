@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Input;
 use strict;
 use warnings;
 
-# $Id: Input.pm,v 1.2 2005/09/30 21:24:40 slanning Exp $
+# $Id: Input.pm,v 1.3 2005/10/06 18:25:18 slanning Exp $
 
 =head1 NAME
 
@@ -75,13 +75,26 @@ sub name {
 =head2 $input->type
 
 Return the type of the input control.
+Note: for <select>, this returns 'select-one' for single select,
+and 'select-multiple' for multiple. (I don't know why.)
 
 =cut
 
 sub type {
     my $self = shift;
     my $input = $self->{input};
-    return $input->GetAttribute('type');
+    my $tagname = lc $input->GetNodeName;
+    if ($tagname eq 'select') {
+        if ($input->GetMultiple) {
+            return 'select-multiple';
+        } else {
+            # I don't know what this is about,
+            # but it works like Win32::IE::Mechanize
+            return 'select-one';
+        }
+    } else {
+        return $input->GetAttribute('type');
+    }
 }
 
 =head2 $input->value( [$value] )
@@ -107,10 +120,7 @@ sub value {
 
 =head2 $input->select_value( [$value] )
 
-B<XXX: to-do>
-
-Mark all options from the options collection with C<$value> as
-selected and unselect all other options.
+Mark all options with C<$value> as selected and unselect all other options.
 
 =cut
 
@@ -118,9 +128,11 @@ sub select_value {
     my $self = shift;
     my $input = $self->{input};
 
-die "not implemented yet\n";
+    # XXX: I think this could be done better, but I just ported it straight
 
     my %vals;
+    my @options = $input->GetOptions;
+
     if ( @_ ) {
         my @values = @_;
         if ( @values == 1 && ref $values[0] eq 'HASH' ) {
@@ -128,28 +140,29 @@ die "not implemented yet\n";
                 ? @{ $values[0]->{n} } : $values[0]->{n};
             @values = ();
             foreach my $i ( @ords ) {
-                $i > 0 && $i <= $input->options->{length} and
-                  push @values, $input->options( $i - 1 )->{value};
+                ($i > 0) && ($i <= @options) and
+                  push @values, $options[$i - 1]->GetValue;
             }
         }
         @values = @{ $values[0] } if @values == 1 && ref $values[0];
 
         # Make sure only the last value is set for:
         # select-one type with multiple values;
+        # XXX: not sure if same type in Mozilla
         @values = ( $values[-1] ) if lc($self->type) eq 'select-one';
 
         %vals = map { ( $_ => undef ) } @values;
 
-        for ( my $i = 0; $i < $input->options->{length}; $i++ ) {
-            $input->options( $i )->{selected} =
-              exists $vals{ $input->options( $i )->{value} };
+        for ( my $i = 0; $i < @options; $i++ ) {
+            $options[$i]->SetSelected(exists $vals{ $options[$i]->GetValue });
         }
     } else {
-        for ( my $i = 0; $i < $input->options->{length}; $i++ ) {
-            $input->options( $i )->{selected} and
-              $vals{ $input->options( $i )->{value} } = 1;
+        for ( my $i = 0; $i < @options; $i++ ) {
+            $options[$i]->GetSelected and
+              $vals{ $options[$i]->GetValue } = 1;
         }
     }
+
     return keys %vals;
 }
 
@@ -172,6 +185,8 @@ sub radio_value {
     if (@_) {
         my $value = shift;
         for (@radios) {
+# print "value=", $value, ", getvalue=", $_->{input}->GetValue, $/;
+
             $_->{input}->SetChecked(($_->{input}->GetValue eq $value) || 0);
         }
     }

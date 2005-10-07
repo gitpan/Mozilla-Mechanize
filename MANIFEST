@@ -31,6 +31,8 @@ t/frames.t
 t/image-parse.t
 t/jstest.t
 t/select.t
+t/pod.t
+t/pod-coverage.t
 t/swaplist.t
 t/tick.t
 t/img/bluedot.png

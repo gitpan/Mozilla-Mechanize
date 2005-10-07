@@ -11,7 +11,7 @@ use_ok 'Mozilla::Mechanize';
 
 my $url = URI::file->new_abs( "t/html/swaplist.html" )->as_string;
 
-isa_ok my $moz = Mozilla::Mechanize->new(), "Mozilla::Mechanize";
+isa_ok my $moz = Mozilla::Mechanize->new(visible => 0), "Mozilla::Mechanize";
 isa_ok $moz->{agent}, "Mozilla::Mechanize::Browser";
 
 ok $moz->get( $url ), "get($url)";
@@ -20,8 +20,7 @@ is $moz->title, "Swaplist Test Page", "->title method";
 
 is $moz->ct, "text/html", "->ct method";
 
-my $form = $moz->form_name( 'swaplist' );
-isa_ok $form, 'Mozilla::Mechanize::Form';
+isa_ok my $form = $moz->form_name( 'swaplist' ), 'Mozilla::Mechanize::Form';
 
 my $ni_list = $form->find_input( 'notin', 'select-multiple' );
 isa_ok $ni_list, 'Mozilla::Mechanize::Input';

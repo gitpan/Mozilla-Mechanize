@@ -9,7 +9,7 @@ use Cwd 'getcwd';
 use lib '../lib';
 use Mozilla::Mechanize;
 
-my $moz = Mozilla::Mechanize->new(debug => 1, visible=> 0);
+my $moz = Mozilla::Mechanize->new(visible=> 0);
 
 my $cwd = getcwd();
 $moz->get("file://$cwd/index.html");

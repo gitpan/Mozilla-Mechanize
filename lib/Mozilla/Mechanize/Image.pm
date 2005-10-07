@@ -79,26 +79,26 @@ sub tag {
 
 =head2 $image->width
 
-Return the value C<width> attrubite.
+Return the value of the C<width> attribute. Only works for <img>.
 
 =cut
 
 sub width {
     my $self = shift;
     my $img = $self->{image};
-    return $img->GetWidth;
+    return (lc($self->tag) eq 'img') ? $img->GetWidth : '';
 }
 
 =head2 $image->height
 
-Return the value C<height> attrubite.
+Return the value of the C<height> attribute. Only works for <img>.
 
 =cut
 
 sub height {
     my $self = shift;
     my $img = $self->{image};
-    return $img->GetHeight;
+    return (lc($self->tag) eq 'img') ? $img->GetHeight : '';
 }
 
 =head2 $image->alt

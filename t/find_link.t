@@ -18,7 +18,7 @@ sub as_WML($) {
 
 my $uri = URI::file->new_abs("t/html/find_link.html")->as_string;
 
-isa_ok my $t = Mozilla::Mechanize->new(), 'Mozilla::Mechanize';
+isa_ok my $t = Mozilla::Mechanize->new(visible => 0), 'Mozilla::Mechanize';
 
 ok $t->get($uri), "get($uri)";
 

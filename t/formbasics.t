@@ -11,7 +11,7 @@ use_ok 'Mozilla::Mechanize';
 
 my $url = URI::file->new_abs( "t/html/formbasics.html" )->as_string;
 
-isa_ok my $moz = Mozilla::Mechanize->new(quiet => 1), "Mozilla::Mechanize";
+isa_ok my $moz = Mozilla::Mechanize->new(quiet => 1, visible => 0), "Mozilla::Mechanize";
 isa_ok $moz->agent, "Mozilla::Mechanize::Browser";
 
 ok $moz->get( $url ), "get($url)";

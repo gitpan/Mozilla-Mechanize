@@ -11,7 +11,7 @@ use_ok 'Mozilla::Mechanize';
 
 my $url = URI::file->new_abs( "t/html/frames.html" )->as_string;
 
-isa_ok my $moz = Mozilla::Mechanize->new(), "Mozilla::Mechanize";
+isa_ok my $moz = Mozilla::Mechanize->new(visible => 0), "Mozilla::Mechanize";
 isa_ok $moz->{agent}, "Mozilla::Mechanize::Browser";
 
 ok $moz->get( $url ), "get($url)";

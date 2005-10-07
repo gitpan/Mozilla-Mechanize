@@ -1,13 +1,26 @@
-0.03  2005-10-02
+0.04  2005-10-07
+  - Ported more tests from Win32::IE::Mechanize. Radio button and maybe select
+    stuff still not good. Fixed bugs in:
+    o  Mechanize.pm:
+       - images (wrong element order), and any methods relying on it
+       - click, click_button ((still slightly) broken)
+    o  Input.pm:
+       - select_value (wasn't implemented)
+       - type, for <select>, now returns 'select-one' for single select,
+         'select-multiple' for multiple
+    Sorry if I've missed any changes. There were many, and I was
+    mostly just trying to get the tests to pass.
+
+0.03  2005-10-04
   - Ported half of the tests from Win32::IE::Mechanize, uncovering
     many bugs (NOTE: tests will definitely fail now):
     o  Mechanize.pm:
        - reload (GUI not fully loading)
-       - links (wrong element order)
+       - links (wrong element order), and any methods relying on it
     o  Form.pm:
-       - inputs (GUI not fully loading)
-       - enctype and method now return default values if not present
-       - attr, enctype and method return default values if not present
+       - inputs (GUI not fully loading, wrong element order)
+       - enctype, method: now return default values if not present
+       - attr, enctype, method: return default values if not present
        - tick (wasn't working)
     o  Input.pm:
        - radio_value (GUI not fully loading, other problems)

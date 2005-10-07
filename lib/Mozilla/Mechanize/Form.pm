@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Form;
 use strict;
 use warnings;
 
-# $Id: Form.pm,v 1.2 2005/09/30 21:24:40 slanning Exp $
+# $Id: Form.pm,v 1.3 2005/10/06 18:25:18 slanning Exp $
 
 use Mozilla::Mechanize::Input;
 
@@ -157,21 +157,41 @@ Win32::IE::Mechanize only pushes on the first one for some reason.
 
 =cut
 
-sub inputs {
-    my $self = shift;
-    my $form = $self->{form};
+{
+    # Recursively get input elements. This is necessary in order
+    # to preserve their order. (cf. _extract_links, _extract_images in Mech.pm)
+    my @inputs;
 
-    my(@inputs, %radio_seen);
+    sub inputs {
+        my ($self, $subelement) = @_;   # 2nd arg is undocumented
+        my $node;
 
-    foreach my $tag (qw(input button select textarea)) {
-        my $nodelist = $form->GetElementsByTagName($tag);
-        for (my $i = 0; $i < $nodelist->GetLength; $i++) {
-            my $node = $nodelist->Item($i);
-            push @inputs, Mozilla::Mechanize::Input->new($node, $self->{moz});
+        # The first time, it's called with no subelement
+        if (defined $subelement) {
+            $node = $subelement;
+        } else {
+            @inputs = ();
+            $node = $self->{form};
         }
-    }
 
-    return wantarray ? @inputs : scalar @inputs;
+        # If it's an input element, get it; otherwise, recurse if has children
+        if ($node->GetNodeName =~ /^(input|button|select|textarea)$/i) {
+            my $tagname = lc $1;
+            push @inputs, Mozilla::Mechanize::Input->new($node, $self->{moz});
+            $self->debug("added '$tagname' input");
+        } elsif ($node->HasChildNodes) {
+            my @children = $node->GetChildNodes;
+            # skips #text nodes
+            foreach my $child (grep {$_->GetNodeName !~ /^#/} @children) {
+                $self->inputs($child);
+            }
+        }
+
+        # Continue only at the top-level
+        return if defined $subelement;
+
+        return wantarray ? @inputs : scalar @inputs;
+    }
 }
 
 =head2 $form->find_input( $name[, $type[, $index]] )
@@ -184,7 +204,8 @@ If $name is specified, then the input must have the indicated name.
 
 If $type is specified, then the input must have the specified type.
 The following type names are used: "text", "password", "hidden",
-"textarea", "file", "image", "submit", "radio", "checkbox" and "option".
+"textarea", "file", "image", "submit", "radio", "checkbox", and "option".
+(and "button" and "select"?)
 
 The $index is the sequence number of the input matched where 1 is the
 first.  If combined with $name and/or $type then it select the I<n>th
@@ -211,6 +232,7 @@ sub find_input {
                 $input->name or next;
                 $input->name ne $name and next;
             }
+
             $input->type =~ $typere or next;
             $cnt++;
             $index && $index ne $cnt and next;
@@ -300,6 +322,12 @@ sub _radio_group {
     @rgroup = $self->find_input($name, 'radio');
 
     return wantarray ? @rgroup : \@rgroup;
+}
+
+sub debug {
+    my ($self, $msg) = @_;
+    my (undef, $file, $line) = caller();
+    print STDERR "$msg at $file line $line\n" if $self->{debug};
 }
 
 

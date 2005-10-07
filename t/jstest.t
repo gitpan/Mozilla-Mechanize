@@ -12,15 +12,13 @@ use_ok 'Mozilla::Mechanize';
 my $uri = URI::file->new_abs( "t/html/jstest.html" )->as_string;
 my $new_uri = URI::file->new_abs( "t/html/jstestok.html" )->as_string;
 
-my $moz = Mozilla::Mechanize->new();
-isa_ok $moz, 'Mozilla::Mechanize';
+isa_ok my $moz = Mozilla::Mechanize->new(visible => 0), 'Mozilla::Mechanize';
 
 $moz->get( $uri );
 is $moz->title, 'JS Redirection Success', "Right title()";
 
-# is this a IE glitch?
-$new_uri =~ s|^file:///?([a-z]):|file:///\U$1:|i;
-# This Windows, case-insensitive
-is $moz->uri, $new_uri, "Got the new uri()";
+# for some reason, submits cause Mozilla to append a question mark,
+# so this just tests if the beginning part of the URL is right
+like $moz->uri, qr/^$new_uri/, "Got the new uri()";
 
 $moz->close();

@@ -2,8 +2,8 @@ package Mozilla::Mechanize;
 use strict;
 use warnings;
 
-# $Id: Mechanize.pm,v 1.2 2005/09/30 21:24:35 slanning Exp $
-our $VERSION = '0.03';
+# $Id: Mechanize.pm,v 1.3 2005/10/06 18:25:13 slanning Exp $
+our $VERSION = '0.04';
 
 use Glib qw(FALSE G_PRIORITY_LOW);
 use URI;
@@ -328,6 +328,8 @@ sub success {
 =head2 $moz->uri
 
 Return the URI of this document (as a URI object).
+Note: whenever you do a submit, Mozilla appends a question mark
+followed by any form input (name=value pairs separated by ampersands).
 
 =cut
 
@@ -919,7 +921,7 @@ Given the name of a field, set its value to the value specified.  This
 applies to the current form (as set by the C<L<form_name()>> or
 C<L<form_number()>> method or defaulting to the first form on the page).
 
-The optional I<$index> parameter is used to distinguish between two fields
+The optional I<$number> parameter is used to distinguish between two fields
 with the same name. The fields are numbered from 1.
 
 =cut
@@ -931,6 +933,8 @@ sub field {
     my $form = $self->current_form;
 
     my @inputs = $form->find_input( $name );
+    $self->debug('field: num inputs = ' . scalar(@inputs));
+
     @inputs or $self->warn( "No '$name' parameter exists" );
     $index ||= 1;
     my $control = $inputs[ $index - 1 ];
@@ -1151,30 +1155,31 @@ sub value {
 
 =head2 $moz->click( $button )
 
-Call the click method on an INPUT object with the name C<$button> Has
+Call the click method on an INPUT object with the name C<$button>. Has
 the effect of clicking a button on a form.  The first argument is the
 name of the button to be clicked. I have not found a way to set the
-(x,y) coordinates of the click in IE.
+(x,y) coordinates of the click.
+
+Note: inputs are searched in the order: buttons, images, submits.
 
 =cut
 
 sub click {
-    my( $self, $button ) = @_;
+    my ($self, $button) = @_;
 
     my $form = $self->current_form;
 
-    my( $toclick ) = sort {
-        ${$a}->{sourceIndex} <=> ${$b}->{sourceIndex}
-    } $form->find_input( $button, 'button' ),
-      $form->find_input( $button, 'image' ),
-      $form->find_input( $button, 'submit' );
+    # XXX: this is unsorted
+    my ($toclick) = (
+        $form->find_input( $button, 'button' ),
+        $form->find_input( $button, 'image' ),
+        $form->find_input( $button, 'submit' ),
+    );
 
-    $toclick and $toclick->click;
+    $toclick and $toclick->click();
 }
 
 =head2 $moz->click_button( %args )
-
-XXX: broken
 
 Has the effect of clicking a button on a form by specifying its name,
 value, or index.  Its arguments are a list of key/value pairs.  Only
@@ -1189,6 +1194,8 @@ Clicks the button named I<name>.
 =item * number => n
 
 Clicks the I<n>th button in the form.
+B<XXX: this isn't working.> (The IE interface is much better
+than the DOM in some ways...)
 
 =item * value => value
 
@@ -1198,7 +1205,7 @@ Clicks the button with the value I<value>.
 
 B<NOTE>: Unlike WWW::Mechanize, Mozilla::Mechanize takes
 all buttonish types of C<< <INPUT type=> >> into account: B<button>,
-B<image> and B<submit>.
+B<image>, and B<submit>.
 
 =cut
 
@@ -1213,15 +1220,16 @@ sub click_button {
     }
 
     my $form = $self->current_form;
-    my @buttons = sort {
-        ${$a}->{sourceIndex} <=> ${$b}->{sourceIndex}
-    } $form->find_input( $args{name}, 'button' ),
-      $form->find_input( $args{name}, 'image' ),
-      $form->find_input( $args{name}, 'submit' );
+    # XXX: this is unsorted
+    my @buttons = (
+        $form->find_input( $args{name}, 'button' ),
+        $form->find_input( $args{name}, 'image' ),
+        $form->find_input( $args{name}, 'submit' ),
+    );
 
     @buttons or return;
     if ( $args{name} ) {
-        $buttons[0]->click;
+        $buttons[0]->click();
         return 1;
     } elsif ( $args{number} ) {
         @buttons <= $args{number} and return
@@ -1655,6 +1663,7 @@ Note: this must be like <iframe ...></iframe>
             }
         } elsif ($node->HasChildNodes) {
             my @children = $node->GetChildNodes;
+            # skips #text nodes
             foreach my $child (grep {$_->GetNodeName !~ /^#/} @children) {
                 $self->_extract_links($child);
             }
@@ -1672,46 +1681,60 @@ Note: this must be like <iframe ...></iframe>
 
 Return a list of images using the C<< $moz->Document->images >>
 interface. All images are mapped onto the L<Mozilla::Mechanize::Image> interface
-that mimics L<WWW::Mechanize::Images>.
+that mimics L<WWW::Mechanize::Image>.
 
 =cut
 
+{
+    # Recursively get image elements. This is necessary in order
+    # to preserve their order. Too bad Mozilla doesn't have
+    # an `all' method like Internet Explorer.
 
-# XXX: has to recurse like _extract_links
-
-sub _extract_images {
-    my $self = shift;
     my @images;
 
-    my $docelem = $self->get_document_element;
+    sub _extract_images {
+        my ($self, $subelement) = @_;
+        my $node;
 
-    # img
-    my $list = $docelem->GetElementsByTagName('img');
-    for (my $i = 0; $i < $list->GetLength; $i++) {
-        push @images, Mozilla::Mechanize::Image->new($list->Item($i), $self);
-    }
-    $list = $docelem->GetElementsByTagName('input');
-    INPUT: for (my $i = 0; $i < $list->GetLength; $i++) {
-        my $input = $list->Item($i);
-
-        # make sure it has a src
-        SRC: {
-            my $attrs = $input->GetAttributes;
-            for (my $j = 0; $j < $attrs->GetLength; $j++) {
-                my $attr = $attrs->Item($j);
-                last SRC if lc $attr->GetNodeName eq 'src'
-                  && $attr->GetValue;
-            }
-            next INPUT;
+        # The first time, it's called with no subelement
+        if (defined $subelement) {
+            $node = $subelement;
+        } else {
+            @images = ();
+            $node = $self->get_document_element;
         }
 
-        push @images, Mozilla::Mechanize::Image->new($input, $self);
+        # If it's an image element, get it; otherwise, recurse if has children
+        if ($node->GetNodeName =~ /^(img|input)$/i) {
+            my $tagname = lc $1;
+
+            if ($tagname eq 'input') {
+                # Element interface is more convenient for attributes
+                my $element = $node->QueryInterface(Mozilla::DOM::Element->GetIID);
+                # <input> are images only if they have a src
+                # (XXX: or maybe should be if type="image"...)
+                push @images, Mozilla::Mechanize::Image->new($element, $self)
+                  if $element->HasAttribute('src');
+                $self->debug("added '$tagname' image");
+            } else {
+                push @images, Mozilla::Mechanize::Image->new($node, $self);
+                $self->debug("added '$tagname' image");
+            }
+        } elsif ($node->HasChildNodes) {
+            my @children = $node->GetChildNodes;
+            # skips #text nodes
+            foreach my $child (grep {$_->GetNodeName !~ /^#/} @children) {
+                $self->_extract_images($child);
+            }
+        }
+
+        # Continue only at the top-level
+        return if defined $subelement;
+
+        $self->{images} = \@images;
+        return wantarray ? @{ $self->{forms} } : $self->{forms};
     }
-    $self->{images} = \@images;
-
-    return wantarray ? @{ $self->{forms} } : $self->{forms};
 }
-
 
 =head2 $self->_wait_while_busy()
 

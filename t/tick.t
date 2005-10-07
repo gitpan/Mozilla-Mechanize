@@ -11,8 +11,7 @@ use_ok( 'Mozilla::Mechanize' );
 
 my $uri = URI::file->new_abs( "t/html/tick.html" )->as_string;
 
-my $moz = Mozilla::Mechanize->new();
-isa_ok( $moz, "Mozilla::Mechanize" );
+isa_ok my $moz = Mozilla::Mechanize->new(visible => 0), "Mozilla::Mechanize";
 
 $moz->get( $uri );
 
