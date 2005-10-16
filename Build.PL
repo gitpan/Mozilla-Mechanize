@@ -12,6 +12,7 @@ my $build = Module::Build->new(
         'Gtk2::MozEmbed' => '0.04',
         'Mozilla::DOM' => '0.20',   # perlish list-returning methods
         'perl' => '5.8.0',
+#        'Mime::Base64' => 0,
     },
     'build_requires' => {
         'Test::More' => '0.54',

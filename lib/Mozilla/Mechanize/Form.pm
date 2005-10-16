@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Form;
 use strict;
 use warnings;
 
-# $Id: Form.pm,v 1.3 2005/10/06 18:25:18 slanning Exp $
+# $Id: Form.pm,v 1.4 2005/10/07 12:17:24 slanning Exp $
 
 use Mozilla::Mechanize::Input;
 
@@ -41,8 +41,7 @@ sub new {
     my $moz = shift;
 
     # turn the Node into an HTMLFormElement
-    my $iid = Mozilla::DOM::HTMLFormElement->GetIID;
-    my $form = $node->QueryInterface($iid);
+    my $form = $node->QueryInterface(Mozilla::DOM::HTMLFormElement->GetIID);
 
     my $self = { form => $form };
     $self->{moz} = $moz if defined $moz;
@@ -159,8 +158,8 @@ Win32::IE::Mechanize only pushes on the first one for some reason.
 
 {
     # Recursively get input elements. This is necessary in order
-    # to preserve their order. (cf. _extract_links, _extract_images in Mech.pm)
-    my @inputs;
+    # to preserve their order. (cf. _extract_links, _extract_images in Mechanize.pm)
+    my (@inputs, %radio_seen);
 
     sub inputs {
         my ($self, $subelement) = @_;   # 2nd arg is undocumented
@@ -171,13 +170,24 @@ Win32::IE::Mechanize only pushes on the first one for some reason.
             $node = $subelement;
         } else {
             @inputs = ();
+            %radio_seen = ();
             $node = $self->{form};
         }
 
         # If it's an input element, get it; otherwise, recurse if has children
         if ($node->GetNodeName =~ /^(input|button|select|textarea)$/i) {
             my $tagname = lc $1;
-            push @inputs, Mozilla::Mechanize::Input->new($node, $self->{moz});
+            if ($tagname eq 'input') {
+                my $input = $node->QueryInterface(Mozilla::DOM::HTMLInputElement->GetIID);
+                my $name = lc $input->GetName;
+                my $type = lc $input->GetType;
+                # For some reason, we only get the first in a radio group
+                unless ($type eq 'radio' and $radio_seen{$name}++) {
+                    push @inputs, Mozilla::Mechanize::Input->new($node, $self->{moz});
+                }
+            } else {
+                push @inputs, Mozilla::Mechanize::Input->new($node, $self->{moz});
+            }
             $self->debug("added '$tagname' input");
         } elsif ($node->HasChildNodes) {
             my @children = $node->GetChildNodes;
@@ -222,7 +232,6 @@ sub find_input {
     my $form = $self->{form};
 
     my $typere = qr/.*/;
-    # ???
     $type and $typere = $type =~ /^select/i ? qr/^$type/i : qr/^$type$/i;
 
     if ( wantarray ) {
@@ -301,7 +310,8 @@ sub reset {
 
 =head2 $self->_radio_group( $name )
 
-Equivalent to C<< $self->find_input($name, 'radio') >>.
+Returns a list of Mozilla::DOM::HTMLInputElement objects with name eq $name.
+(Intended for use with Input.pm's radio_value method.)
 
 =cut
 
@@ -312,14 +322,13 @@ sub _radio_group {
     my $name = shift or return;
     my @rgroup;
 
-#     for ( my $i = 0; $i < $form->all->length; $i++ ) {
-#         next unless $form->all( $i )->tagName =~ /input/i;
-#         next unless $form->all( $i )->type =~ /radio/i;
-#         next unless $form->all( $i )->name eq $name;
-#         push @rgroup, $form->all( $i );
-#     }
-
-    @rgroup = $self->find_input($name, 'radio');
+    my @inputs = $form->GetElementsByTagName('input');
+    my $iid = Mozilla::DOM::HTMLInputElement->GetIID;
+    foreach my $input (map {$_->QueryInterface($iid)} @inputs) {
+        next unless lc($input->GetType) eq 'radio';
+        next unless lc($input->GetName) eq lc($name);
+        push @rgroup, $input;
+    }
 
     return wantarray ? @rgroup : \@rgroup;
 }

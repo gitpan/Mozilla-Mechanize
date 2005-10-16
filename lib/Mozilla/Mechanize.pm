@@ -2,8 +2,8 @@ package Mozilla::Mechanize;
 use strict;
 use warnings;
 
-# $Id: Mechanize.pm,v 1.3 2005/10/06 18:25:13 slanning Exp $
-our $VERSION = '0.04';
+# $Id: Mechanize.pm,v 1.4 2005/10/07 12:17:20 slanning Exp $
+our $VERSION = '0.05';
 
 use Glib qw(FALSE G_PRIORITY_LOW);
 use URI;
@@ -72,15 +72,9 @@ L<Gtk2::MozEmbed|Gtk2::MozEmbed>.
 Don't expect it to be like L<WWW::Mechanize|WWW::Mechanize>
 in that the class is not derived from the user-agent class (like LWP).
 
-B<WARNING: this has been very quickly ported from Win32::IE::Mechanize,
-and I don't expect it to even be working yet. The docs are incomplete
-and may still refer to the Win32 module. Some methods are unimplemented.>
-
-B<WARNING>: This is a work in progress and my first priority will be
-to implement the L<WWW::Mechanize|WWW::Mechanize> interface (which is
-still in full development). Wherever possible and needed I will also
-implement B<LWP::UserAgent> methods that the mech inherits and will
-help make this thing useful.
+B<WARNING: this was quickly ported from Win32::IE::Mechanize.
+The docs are incomplete and may still refer to the Win32 module.
+Some methods are unimplemented.>
 
 Comment from Abe, which I echo: Thank you Andy Lester for
 L<WWW::Mechanize|WWW::Mechanize>. I ported a lot of that code
@@ -231,7 +225,7 @@ sub close {
     $self->{agent}->quit;
     $self->{agent} = undef;
 
-    # XXX: I think we need to run the GUI here
+    # XXX: do we need to run the GUI here?
 }
 
 sub open {
@@ -687,12 +681,12 @@ Lists all the images on the current page.  Each image is a
 Mozilla::Mechanize::Image object. In list context, returns a list of all
 images.  In scalar context, returns an array reference of all images.
 
-(XXX: not sure if this is true for Mozilla::Mechanize)
 B<NOTE>: Although L<WWW::Mechanize> explicitly only supports
     <INPUT type=submit src="...">
 constructs, this is B<not> supported by IE, it must be:
     <INPUT type=image src="...">
 for IE to behave as expected.
+(XXX: not sure if this is true for Mozilla::Mechanize)
 
 =cut
 
@@ -1194,8 +1188,9 @@ Clicks the button named I<name>.
 =item * number => n
 
 Clicks the I<n>th button in the form.
-B<XXX: this isn't working.> (The IE interface is much better
-than the DOM in some ways...)
+B<XXX: this isn't currently working.> It will select the Nth button
+if you assume they're gotten in the order: button, image, submit.
+This will presumably get fixed sometime, so I'd advise not relying on it.
 
 =item * value => value
 
@@ -1457,7 +1452,8 @@ sub load_frame {
 
 =head2 $moz->get_window;
 
-Convenience method to get the Window (Mozilla::DOM::Window).
+Convenience method to get the Window
+(L<Mozilla::DOM::Window|Mozilla::DOM::Window>).
 (This is the `window' browser object in JavaScript.)
 
 =cut
@@ -1471,7 +1467,8 @@ sub get_window {
 
 =head2 $moz->get_document;
 
-Convenience method to get the Document (Mozilla::DOM::Document).
+Convenience method to get the Document
+(L<Mozilla::DOM::Document|Mozilla::DOM::Document>).
 (This is the `document' browser object in JavaScript.)
 
 =cut
@@ -1484,8 +1481,9 @@ sub get_document {
 
 =head2 $moz->get_document_element;
 
-Convenience method to get the document element (Mozilla::DOM::Element).
-(Actually this is a Mozilla::DOM::HTMLHtmlElement,
+Convenience method to get the document element
+(L<Mozilla::DOM::Element|Mozilla::DOM::Element>).
+(Actually this is a L<Mozilla::DOM::HTMLHtmlElement|Mozilla::DOM::HTMLHtmlElement>,
 i.e. <html>, if you want to QueryInterface to it).
 This is useful for calling GetElementsByTagName.
 
@@ -1585,9 +1583,9 @@ sub DESTROY {
 
 =head2 $moz->_extract_forms()
 
-Return a list of forms using the C<< $moz->Document->forms >>
-interface. All forms are mapped onto the L<Mozilla::Mechanize::Form> interface
-that mimics L<HTML::Form>.
+Return a list of forms. All forms are mapped onto the
+L<Mozilla::Mechanize::Form|Mozilla::Mechanize::Form> interface
+that mimics L<HTML::Form|HTML::Form>.
 
 =cut
 
@@ -1679,9 +1677,9 @@ Note: this must be like <iframe ...></iframe>
 
 =head2 $moz->_extract_images()
 
-Return a list of images using the C<< $moz->Document->images >>
-interface. All images are mapped onto the L<Mozilla::Mechanize::Image> interface
-that mimics L<WWW::Mechanize::Image>.
+Return a list of images.
+All images are mapped onto the L<Mozilla::Mechanize::Image|Mozilla::Mechanize::Image>
+interface that mimics L<WWW::Mechanize::Image|WWW::Mechanize::Image>.
 
 =cut
 
@@ -1742,7 +1740,8 @@ This adds a "single-shot" idle callback that does Gtk2->main_quit,
 then does Gtk2->main. The result is that whenever the UI becomes idle
 it will exit the main loop. Thanks to muppet for the idea.
 This is repeated until the net_stop event fires, indicating that
-the new page has finished loading.
+the new page has finished loading. (Note therefore that you can only
+call this when you expect a new page to load.)
 
 =cut
 
@@ -1821,6 +1820,7 @@ sub debug {
 
 =head2 $self->_extra_headers( )
 
+(XXX: Not implemented.)
 For the moment we only support B<basic authentication>.
 
 =cut
@@ -1880,6 +1880,7 @@ sub __prop_value($;$) {
 
 =head2 __authorization_basic( $user, $pass )
 
+(XXX: Not implemented.)
 Return a HTTP "Authorization: Basic xxx" header.
 
 =cut

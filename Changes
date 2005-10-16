@@ -1,3 +1,8 @@
+0.05  2005-10-09
+  - Fixed set_visible (tests in t/field.t). Aside from unimplemented
+    methods (`success', `set_property'), all tests are passing now
+    (though tests don't fully cover the code by a long shot).
+
 0.04  2005-10-07
   - Ported more tests from Win32::IE::Mechanize. Radio button and maybe select
     stuff still not good. Fixed bugs in:

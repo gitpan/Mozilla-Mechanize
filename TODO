@@ -2,6 +2,8 @@ Roughly in order of priority:
 
 Finish tests.
 
+Unimplemented methods: success, set_property
+
 Currently the user-agent is hardcoded.
 Would be better if you could plugin/inherit your own browser code.
 

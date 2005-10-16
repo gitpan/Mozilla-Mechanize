@@ -10,7 +10,7 @@ This module, Mozilla::Mechanize, is a port of Win32::IE::Mechanize that uses
 an embedded Gecko widget. I say "an embedded Gecko widget" and not "Mozilla",
 because it doesn't use a technology like OLE automation or DCOM to remotely
 control a separate, "real" browser. Instead, using Mozilla::DOM, you control
-an embedded Gecko widget (probably based on Gtk2::MozEmbed). Since Gecko is
+an embedded Gecko widget (currently based on Gtk2::MozEmbed). Since Gecko is
 the HTML rendering engine of Mozilla/Firefox, it's the same as Mozilla,
 at least as far as the DOM is concerned.
 
@@ -19,16 +19,12 @@ involve rendering an HTML page exactly as a real browser does, on any platform,
 but without having to open a browser window. The quest continues... :)
 
 
-IMPORTANT: this has been very quickly ported from Win32::IE::Mechanize,
-and I don't expect it to even be working yet.
-
-
 DEPENDENCIES
 
 Mozilla::DOM
 Gtk2::MozEmbed
 URI
-Mime::Base64 (only if Basic auth is used)
+Mime::Base64 (only if Basic auth (currently unimplemented) is used)
 
 
 INSTALLATION

@@ -2,7 +2,7 @@ package Mozilla::Mechanize::Input;
 use strict;
 use warnings;
 
-# $Id: Input.pm,v 1.3 2005/10/06 18:25:18 slanning Exp $
+# $Id: Input.pm,v 1.4 2005/10/07 12:17:24 slanning Exp $
 
 =head1 NAME
 
@@ -185,12 +185,10 @@ sub radio_value {
     if (@_) {
         my $value = shift;
         for (@radios) {
-# print "value=", $value, ", getvalue=", $_->{input}->GetValue, $/;
-
-            $_->{input}->SetChecked(($_->{input}->GetValue eq $value) || 0);
+            $_->SetChecked(($_->GetValue eq $value) || 0);
         }
     }
-    my ($value) = map($_->{input}->GetValue, grep($_->{input}->GetChecked, @radios));
+    my ($value) = map($_->GetValue, grep($_->GetChecked, @radios));
     return $value;
 }
 

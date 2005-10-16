@@ -33,15 +33,11 @@ ok $moz->get($uri), "Fetched $uri";
     is $moz->value("bongo"), "bango", "value(bongo) == bango";
 
 
-SKIP: {
-    skip 'set_visible not working yet', 2;
-
     $moz->set_visible([ radio => "wongo!" ], "boingo");
     my $form3 = $moz->current_form;
 
     is $form3->value("wango"), "wongo!", "wango => wongo!";
     is $form3->find_input("dingo", undef, 2)->value, "boingo",
       "dingo(2) => boingo";
-}
 
 $moz->close();
