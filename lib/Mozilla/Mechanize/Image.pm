@@ -86,7 +86,16 @@ Return the value of the C<width> attribute. Only works for <img>.
 sub width {
     my $self = shift;
     my $img = $self->{image};
-    return (lc($self->tag) eq 'img') ? $img->GetWidth : '';
+
+    if (lc($self->tag) eq 'img') {
+        # xxx: no!
+        #return $img->GetWidth;
+
+        return $img->GetAttribute('width');
+    }
+    else {
+        return '';
+    }
 }
 
 =head2 $image->height
@@ -98,7 +107,15 @@ Return the value of the C<height> attribute. Only works for <img>.
 sub height {
     my $self = shift;
     my $img = $self->{image};
-    return (lc($self->tag) eq 'img') ? $img->GetHeight : '';
+    if (lc($self->tag) eq 'img') {
+        # xxx: no!
+        #return $img->GetHeight;
+
+        return $img->GetAttribute('height');
+    }
+    else {
+        return '';
+    }
 }
 
 =head2 $image->alt
@@ -120,7 +137,7 @@ __END__
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2005, Scott Lanning <slanning@cpan.org>. All rights reserved.
+Copyright 2005,2009 Scott Lanning <slanning@cpan.org>. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

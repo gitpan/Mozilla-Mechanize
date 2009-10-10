@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-Mozilla::Mechanize:Input - A small class to interface with the Input objects
+Mozilla::Mechanize::Input - A small class to interface with the Input objects
 
 =head1 SYNOPSIS
 
@@ -215,7 +215,7 @@ __END__
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2005, Scott Lanning <slanning@cpan.org>. All rights reserved.
+Copyright 2005,2009 Scott Lanning <slanning@cpan.org>. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

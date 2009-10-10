@@ -159,7 +159,7 @@ __END__
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2005, Scott Lanning <slanning@cpan.org>. All rights reserved.
+Copyright 2005,2009 Scott Lanning <slanning@cpan.org>. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

@@ -3,12 +3,12 @@ use strict;
 use warnings;
 
 # $Id: Mechanize.pm,v 1.4 2005/10/07 12:17:20 slanning Exp $
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use Glib qw(FALSE G_PRIORITY_LOW);
 use URI;
 
-use Mozilla::DOM '0.20';
+use Mozilla::DOM '0.22';
 use Mozilla::Mechanize::Browser;
 use Mozilla::Mechanize::Form;
 use Mozilla::Mechanize::Input;
@@ -210,7 +210,7 @@ sub set_property {
 
     foreach my $prop ( keys %opt ) {
         defined $opt{ $prop } and
-            $self->{agent}->{ $prop } = $opt{ $prop };
+          $self->agent->{ $prop } = $opt{ $prop };
     }
 }
 
@@ -222,7 +222,7 @@ Close the Browser.
 
 sub close {
     my $self = shift;
-    $self->{agent}->quit;
+    $self->agent->quit();
     $self->{agent} = undef;
 
     # XXX: do we need to run the GUI here?
@@ -265,7 +265,7 @@ Fetch C<$url>.
 
 sub get {
     my $self = shift;
-    my $agent = $self->{agent};
+    my $agent = $self->agent;
     my ($url) = @_;
 
     my $uri = $self->uri
@@ -276,7 +276,7 @@ sub get {
 #    $agent->navigate({ URL     => $uri->as_string,
 #                       Headers => $self->_extra_headers($uri) });
 
-    $agent->{embed}->load_url($uri->as_string);
+    $agent->embedded->load_url($uri->as_string);
     $self->_wait_while_busy;
 }
 
@@ -287,7 +287,7 @@ Reload the page.
 =cut
 
 sub reload {
-    $_[0]->{agent}->{embed}->reload('reloadnormal');
+    $_[0]->agent->embedded->reload('reloadnormal');
     $_[0]->_wait_while_busy;
 }
 
@@ -298,7 +298,7 @@ Go back a page in the browser history.
 =cut
 
 sub back {
-    $_[0]->{agent}->{embed}->go_back;
+    $_[0]->agent->embedded->go_back;
     $_[0]->_wait_while_busy;
 }
 
@@ -308,11 +308,12 @@ sub back {
 
 B<XXX: I don't know how to implement this yet.
 So this always returns true for now.>
+In fact, if a URL doesn't exist, it'll pop up a dialog. :/
 
 =cut
 
 sub success {
-#    $_[0]->{agent}->ReadyState >= 2;
+#    $_[0]->agent->ReadyState >= 2;
 
     # XXX: uh??
 
@@ -329,8 +330,8 @@ followed by any form input (name=value pairs separated by ampersands).
 
 sub uri {
     my $self = shift;
-    my $agent = $self->{agent};
-    my $embed = $agent->{embed};
+    my $agent = $self->agent;
+    my $embed = $agent->embedded;
     my $uri = $embed->get_location;
     URI->new($uri);
 }
@@ -379,7 +380,7 @@ Fetch the C<title> from the document.
 
 =cut
 
-sub title { $_[0]->{agent}->{embed}->get_title }
+sub title { $_[0]->agent->embedded->get_title }
 
 
 =head1 CONTENT-HANDLING METHODS
@@ -395,7 +396,7 @@ might be rearranged, and some linebreaks might be missing.)
 
 sub content {
     my $self = shift;
-    my $embed = $self->{agent}->{embed};
+    my $embed = $self->agent->embedded;
     my $html = '';
 
     # Boohoo, no outerHTML
@@ -438,7 +439,7 @@ C<Mozilla::Mechanize::Link> objects.
 sub links {
     my $self = shift;
 
-    defined $self->{links} or $self->{links} = $self->_extract_links;
+    defined $self->{links} or $self->{links} = $self->_extract_links();
 
     return wantarray ? @{ $self->{links} } : $self->{links};
 }
@@ -1460,7 +1461,7 @@ Convenience method to get the Window
 
 sub get_window {
     my $self = shift;
-    my $embed = $self->{agent}{embed};
+    my $embed = $self->agent->embedded;
     my $browser = $embed->get_nsIWebBrowser;
     return $browser->GetContentDOMWindow;
 }
@@ -1576,7 +1577,7 @@ Close the browser.
 =cut
 
 sub DESTROY {
-    my $agent = shift->{agent};
+    my $agent = shift->agent;
     $agent && $agent->quit;
 }
 
@@ -1747,7 +1748,7 @@ call this when you expect a new page to load.)
 
 sub _wait_while_busy {
     my $self = shift;
-    my $agent = $self->{agent};
+    my $agent = $self->agent;
 
     do {
         Glib::Idle->add(sub {
@@ -1917,7 +1918,7 @@ the code from L<Win32::IE::Mechanize|Win32::IE::Mechanize>, by Abe Timmerman.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2005, Scott Lanning <slanning@cpan.org>. All rights reserved.
+Copyright 2005,2009 Scott Lanning <slanning@cpan.org>. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

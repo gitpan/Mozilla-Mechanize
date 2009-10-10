@@ -40,8 +40,14 @@ is scalar(@forms), 2, "Form count";
         ok defined $form_nb->find_input( $field ), "Fields exist";
     }
 
+    # This used to return just 'formbasics.html',
+    # but in Firefox it's returning
+    # 'file:///full/path/Mozilla-Mechanize/t/html/formbasics.html'
+    # so I just match the filename
     my $furi = 'formbasics.html';
-    is $form_nb->action, $furi, "action( $furi )";
+    like $form_nb->action, qr{$furi$}, "action( $furi )";
+
+
     is lc($form_nb->method), 'get', "method=GET";
     is $form_nb->enctype, 'application/x-www-form-urlencoded', "enctype()";
     my $fname = $form_nb->attr( 'name' );

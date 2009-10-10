@@ -15,6 +15,9 @@ my $new_uri = URI::file->new_abs( "t/html/jstestok.html" )->as_string;
 isa_ok my $moz = Mozilla::Mechanize->new(visible => 0), 'Mozilla::Mechanize';
 
 $moz->get( $uri );
+
+sleep 1;    # XXX: problem with _wait_while_busy
+
 is $moz->title, 'JS Redirection Success', "Right title()";
 
 # for some reason, submits cause Mozilla to append a question mark,

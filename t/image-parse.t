@@ -31,6 +31,7 @@ is lc($first->tag), "img", "img tag";
 (my $juri = $url1 ) =~ s|:///?([a-z]):|:///\U$1:|i;
 is $first->url, $juri, "src=\"$juri\"";
 is $first->alt, "The world of the wango", "alt=The world of the wango";
+
 is $first->height, 142, "height";
 is $first->width, 43, "width";
 
@@ -39,7 +40,8 @@ is lc $second->tag, "input", "input tag";
 # XXX: for some reason, <img src> is absolute whereas <input src> is relative!
 #(my $guri = $url2 ) =~ s|:///?([a-z]):|:///\U$1:|i;
 #is $second->url, $guri, "src=$guri";
-is $second->url, 'bongo.gif', 'src="bongo.gif"';
+# XXX2: now with Firefox it's absolute for this too, so just matching the filename..
+like $second->url, qr{bongo\.gif$}, 'src="bongo.gif"';
 is $second->alt, '', "alt";
 
 my $fia1 = $moz->find_image( alt => "The world of the wango" );

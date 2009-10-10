@@ -1,7 +1,17 @@
+0.06  2009-10-11 | fixed for newer gtkmozembed
+  - added handler for net_state signal, which is needed for some documents
+    (I think when a document loads other docs); thanks to Marco Lamberto
+    for the bug report and suggestion that it was related to net_stop
+    not firing
+  - fixed 'width' and 'height' methods of Image.pm; they now return
+    the width and height attributes rather than using $img->GetWidth
+    and $img->GetHeight, which apparently return random numbers...
+
 0.05  2005-10-09
   - Fixed set_visible (tests in t/field.t). Aside from unimplemented
     methods (`success', `set_property'), all tests are passing now
     (though tests don't fully cover the code by a long shot).
+  - Added `embedded' method to Browser class
 
 0.04  2005-10-07
   - Ported more tests from Win32::IE::Mechanize. Radio button and maybe select

@@ -13,6 +13,7 @@ eg/synopsis.pl
 eg/form.html
 eg/result.html
 eg/submit.pl
+eg/success.pl
 lib/Mozilla/Mechanize.pm
 lib/Mozilla/Mechanize/Browser.pm
 lib/Mozilla/Mechanize/Browser/Gtk2MozEmbed.pm

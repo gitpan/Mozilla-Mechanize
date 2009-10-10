@@ -11,3 +11,6 @@
 ^releases
 ^tmp
 CVS
+^.git
+Makefile
+browser_child.cc
